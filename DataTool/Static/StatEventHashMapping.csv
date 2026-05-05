@@ -1,0 +1,64 @@
+# STUStatEvent Hash Mapping
+# Format: Hash,Name,Category,Description
+# Hash values from STUStatEvent enum, mapped to semantic names through analysis
+# Category: Combat, Ability, Status, Objective, Match, Player
+
+# Combat Events
+E5631C68,Damage,Combat,Damage dealt to target
+2F82175E,Healing,Combat,Healing applied to target
+743ADED8,Elimination,Combat,Final blow on enemy
+97560AE2,Death,Combat,Player died
+3DF3B646,Assist,Combat,Assist credit for elimination
+3AD3F5CE,SoloKill,Combat,Unassisted elimination
+DB04E254,EnvironmentalKill,Combat,Environmental elimination
+D833B0B8,CriticalHit,Combat,Headshot or critical damage
+23214279,SelfHealing,Combat,Self-healing applied
+C7C76CDC,HealingReceived,Combat,Healing received from ally
+F3EFC99D,DamageBlocked,Combat,Damage blocked by barrier/shield
+63EEDC3C,DamageAbsorbed,Combat,Damage absorbed by ability
+7DF0A7F0,Resurrect,Combat,Player resurrected
+
+# Ability Events
+99D5B81C,AbilityUsed,Ability,Ability activated
+EA5EFEB6,AbilityEnded,Ability,Ability deactivated/ended
+EFAB143E,UltimateUsed,Ability,Ultimate ability activated
+92980BE1,UltimateEnded,Ability,Ultimate ability ended
+58EA20DF,UltimateCharged,Ability,Ultimate fully charged
+55BCA339,UltimateProgress,Ability,Ultimate charge gained
+C5897A6C,CooldownStarted,Ability,Ability entered cooldown
+90B577B0,CooldownReset,Ability,Ability cooldown reset
+8F5D5A97,ChargeGained,Ability,Ability charge restored
+6B5E309C,ChargeUsed,Ability,Ability charge consumed
+
+# Status Effect Events
+68C0A894,StatusApplied,Status,Status effect applied
+2149472B,StatusRemoved,Status,Status effect removed
+BEA7B46D,Stunned,Status,Player stunned
+C2266CDE,Frozen,Status,Player frozen
+503D87AC,Slept,Status,Player slept (Ana)
+5C856F9A,Hacked,Status,Player hacked (Sombra)
+911F8CF6,Discorded,Status,Discord orb applied
+8948BAEE,AntiHealed,Status,Anti-heal applied
+6A9B3544,Burning,Status,Burning damage over time
+7A961526,Poisoned,Status,Poison damage over time
+AA56CE1F,Nanoboosted,Status,Nano boost received
+A2A84D2A,Amplified,Status,Damage amplified
+
+# Objective Events
+482E36FD,ObjectiveCapturing,Objective,Started capturing objective
+04889B03,ObjectiveCaptured,Objective,Objective fully captured
+72A5F162,ObjectiveLost,Objective,Objective control lost
+DADA298F,PayloadProgress,Objective,Payload distance moved
+1D9F1262,CheckpointReached,Objective,Payload checkpoint reached
+DE01F6E7,OnObjective,Objective,Player on objective
+60EEB368,OffObjective,Objective,Player left objective
+# Additional hashes to be mapped through replay analysis
+
+# Match Events - from STUPlayerStatEvent (known names)
+# These use different hash system
+
+# Player Events
+# To be discovered through replay analysis
+
+# Unknown/Unmapped (placeholder entries for discovery)
+# Add new mappings here as they are discovered through binary analysis

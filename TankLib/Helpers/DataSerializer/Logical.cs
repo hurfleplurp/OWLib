@@ -193,8 +193,7 @@ namespace TankLib.Helpers.DataSerializer
                     byte[] compressedBuffer =
                         reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
                     CompressedSize = compressedBuffer.Length;
-                    // return Decompress(compressedBuffer);
-                    return compressedBuffer;
+                    return Decompress(compressedBuffer);
                 }
                 return null;
             }
