@@ -41,9 +41,20 @@ namespace DataTool {
             };
         }
 
-        public bool ShouldDo(string name, Dictionary<string, TagExpectedValue>? expectedVals = null) {
+        public bool ShouldDo(string name, Dictionary<string, TagExpectedValue>? expectedVals=null, ReadOnlySpan<string> alternateNames=default) {
+            name = name.ReplaceLineEndings(""); // Magma\r\nTitan
+            name = name.Replace("<hy>", ""); // deDE
+            name = name.Replace("<en>", ""); // thTR
+            name = name.Replace("<en/>", ""); // thTR
+            
+            // IsDisallowed promotes spellcheck for the canon name. so we don't need to worry about it anywhere
+            // else in this function
             if (Values.IsDisallowed(name)) {
                 // if disallowed by name, don't attempt to match tags
+                return false;
+            }
+            // (or if alternate name explicitly disallowed)
+            if (Values.Disallowed.Matches(alternateNames)) {
                 return false;
             }
             
@@ -64,31 +75,28 @@ namespace DataTool {
                     }
                     
                     if (!explicitlyAllowed) {
-                        // if the tag value is not explicitly allowed or disallowed
+                        // if the tag value is not explicitly allowed or disallowed (but is specified)
                         // try to match by exact unlock name instead
                         // this helps with owl skins, as the tag is set to "none" by default
                         // (if we allowed glob, (leagueteam=boston) would match everything due to unspecified Allowed)
-                        return Values.Allowed.MatchesNoGlob(name);
+                        return Values.Allowed.MatchesNoGlob(name) || Values.Allowed.MatchesNoGlob(alternateNames);
                     }
                 }
             }
 
-            return Values.IsAllowed(name);
+            // use IsAllowed because it specifically checks for 0 count set ( = glob)
+            return Values.IsAllowed(name) || Values.Allowed.Matches(alternateNames);
         }
     }
 
     public record ParsedHero {
-        public required Dictionary<string, ParsedArg> Types;
+        public readonly IgnoreCaseDict<ParsedArg> Types = [];
         public bool Matched = false;
     }
 
     public class ParsedNameSet {
-        private readonly IgnoreCaseDict<ParsedName> Map;
+        private readonly IgnoreCaseDict<ParsedName> Map = [];
         public int Count => Map.Count;
-
-        public ParsedNameSet() {
-            Map = new IgnoreCaseDict<ParsedName>();
-        }
         
         public void Add(ReadOnlySpan<char> value) {
             Add(value.ToString());
@@ -122,6 +130,24 @@ namespace DataTool {
                 return true;
             }
 
+            return false;
+        }
+        
+        public bool MatchesNoGlob(ReadOnlySpan<string> names) {
+            foreach (var name in names) {
+                if (MatchesNoGlob(name)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool Matches(ReadOnlySpan<string> names) {
+            foreach (var name in names) {
+                if (Matches(name)) {
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -279,7 +305,7 @@ namespace DataTool {
             }
         }
 
-        protected Dictionary<string, ParsedHero>? ParseQuery(
+        protected IgnoreCaseDict<ParsedHero>? ParseQuery(
             ICLIFlags flags,
             List<QueryType> queryTypes,
             IgnoreCaseDict<string>? queryNameOverrides = null,
@@ -305,7 +331,7 @@ namespace DataTool {
             var inputArguments = flags.Positionals.AsSpan(3);
             if (inputArguments.Length == 0) return null;
 
-            Dictionary<string, ParsedHero> output = new IgnoreCaseDict<ParsedHero>();
+            var output = new IgnoreCaseDict<ParsedHero>();
 
             foreach (string opt in inputArguments) {
                 if (opt.StartsWith("--")) continue; // ok so this is a flag
@@ -321,10 +347,10 @@ namespace DataTool {
                     hero = nameForThisLocale;
                 }
 
-                var heroOutput = new IgnoreCaseDict<ParsedArg>();
-                output[hero] = new ParsedHero {
-                    Types = heroOutput
-                };
+                if (!output.TryGetValue(hero, out var parsedHero)) {
+                    parsedHero = new ParsedHero();
+                    output.Add(hero, parsedHero);
+                }
 
                 var afterHero = split.AsSpan(1);
                 if (afterHero.Length == 0) {
@@ -335,7 +361,7 @@ namespace DataTool {
                         var parsedArg = new ParsedArg(type);
                         PopulateDefaultTags(type, parsedArg);
 
-                        heroOutput.Add(type.Name, parsedArg);
+                        parsedHero.Types.Add(type.Name, parsedArg);
                     }
                     continue;
                 }
@@ -358,7 +384,7 @@ namespace DataTool {
                     
                     foreach (QueryType queryType in typesMatchingName) {
                         var parsedArg = new ParsedArg(queryType);
-                        heroOutput.Add(queryType.Name, parsedArg);
+                        parsedHero.Types.Add(queryType.Name, parsedArg);
                         // todo: using .Add here can of course fail but we would previously only use the 2nd occurrence.. its better to explode
 
                         // todo: rewrite this parse loop...
@@ -457,7 +483,7 @@ namespace DataTool {
             }
         }
 
-        protected Dictionary<string, ParsedArg> GetQuery(Dictionary<string, ParsedHero> parsedHeroes, params string?[] namesToMatch) {
+        protected IgnoreCaseDict<ParsedArg> GetQuery(Dictionary<string, ParsedHero> parsedHeroes, params string?[] namesToMatch) {
             IgnoreCaseDict<ParsedArg> output = new IgnoreCaseDict<ParsedArg>();
             foreach (string? nameToMatch in namesToMatch) {
                 if (nameToMatch == null) continue;
@@ -501,9 +527,11 @@ namespace DataTool {
                             continue;
                         }
 
-                        if (allowed.IsEqual("overwatch 1") || allowed.IsEqual("overwatch 2") ||
+                        if (allowed.IsEqual("overwatch 1") || allowed.IsEqual("overwatch 2") || 
+                            allowed.IsEqual("overwatch classic") || allowed.IsEqual("overwatch") ||
                             allowed.IsEqual("classic") || allowed.IsEqual("valorous") ||
-                            allowed.IsEqual("守望先锋") || allowed.IsEqual("守望先锋归来")) {
+                            allowed.IsEqual("守望先锋") || allowed.IsEqual("守望先锋归来") ||
+                            allowed.IsEqual("守望先锋经典版")) {
                             // (IsEqual sets matched flag, but doesn't matter at this point)
                             unknownBaseSkin = true;
                         }
@@ -536,14 +564,31 @@ namespace DataTool {
             var isChinaClient = ((ClientCreateArgs_Tank)createArgs.HandlerArgs!).ManifestRegion == ClientCreateArgs_Tank.REGION_CN;
 
             if (unknownBaseSkin) {
+                Logger.Warn("Query", "In 2026: Season 1, \"Overwatch 2\" and \"Overwatch 1\" skins have been renamed to \"Overwatch\" and \"Overwatch Classic\"");
+                
+                // previous:
+                // 0x0DE000000000CB5F rcn en: Valorous
+                // 0x0DE00000000024D4 rcn en: Classic
+                // 0x0DE000000000CB5F rcn cn: 守望先锋归来
+                // 0x0DE00000000024D4 rcn cn: 守望先锋
+                // 0x0DE000000000CB5F rdev cn: 守望先锋归来
+                // 0x0DE00000000024D4 rdev cn 守望先锋
+                
+                // 2026 S1:
+                // 0x0DE000000000CB5F rcn en: Overwatch
+                // 0x0DE00000000024D4 rcn en: Classic
+                // 0x0DE000000000CB5F rcn cn: 守望先锋
+                // 0x0DE00000000024D4 rcn cn: 守望先锋
+                // 0x0DE000000000CB5F rdev cn: 守望先锋
+                // 0x0DE00000000024D4 rdev cn: 守望先锋经典版 
+                
                 if (isChinaClient && isEnglish) {
-                    Logger.Warn("Query", "On the Chinese client, \"Overwatch 1\" skins are renamed to \"Classic\"");
-                    Logger.Warn("Query", "On the Chinese client, \"Overwatch 2\" skins are renamed to \"Valorous\"");
+                    Logger.Warn("Query", "On the Chinese client, \"Overwatch Classic\" skins are renamed to \"Classic\"");
                 } else if (isChinese) {
-                    Logger.Warn("Query", "In Chinese, \"Overwatch 1\" skins are renamed to \"守望先锋\"");
-                    Logger.Warn("Query", "In Chinese, \"Overwatch 2\" skins are renamed to \"守望先锋归来\"");
+                    // todo: except for on the chinese client, where both ow1 and ow2 skins are called "守望先锋" now... okay
+                    Logger.Warn("Query", "In Chinese, \"Overwatch Classic\" skins are renamed to \"守望先锋经典版\"");
                 } else if (isChinaClient) {
-                    Logger.Warn("Query", "On the Chinese client, \"Overwatch 1\" and \"Overwatch 2\" skins have different names. Check in-game");
+                    Logger.Warn("Query", "On the Chinese client, \"Overwatch Classic\" skins have different names. Check in-game");
                 }
             }
             

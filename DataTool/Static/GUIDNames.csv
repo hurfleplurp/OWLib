@@ -154,7 +154,7 @@ D8,078,Turret/EnemyTurretSeen,1
 69B,078,Hack,1
 69C,078,Hack,1
 69D,078,StealthActivate,1
-69E,078,YourWelcome,1
+69E,078,YoureWelcome,1
 6A1,078,Laugh,1
 6A4,078,Junkenstein,1
 6A5,078,Junkenstein,1
@@ -676,6 +676,22 @@ FFB,078,Voicelines,1 ; 1.62
 1961,078,Voicelines,1 ; s18 - persona
 1972,078,Voicelines,1 ; s19
 19B2,078,Voicelines,1 ; s20
+19D0,078,Voicelines,1 ; 2026 - s1
+19D1,078,Voicelines,1 ; 2026 - s1 - hello kitty
+19D2,078,Voicelines,1 ; 2026 - s1 - hello kitty
+19D4,078,Voicelines,1 ; 2026 - s1 - hello kitty
+19D7,078,Voicelines,1 ; 2026 - s1 - hello kitty
+19D8,078,Voicelines,1 ; 2026 - s1
+19E5,078,Voicelines,1 ; 2026 - s1 - hero progression
+19E7,078,Voicelines,1 ; 2026 - s1 - hero progression
+1A09,078,Voicelines,1 ; 2026 - s1 - april fools
+1A0A,078,Voicelines,1 ; 2026 - s2 - diablo
+1A0B,078,Voicelines,1 ; 2026 - s2 - diablo
+1A0C,078,Voicelines,1 ; 2026 - s2 - diablo
+1A0D,078,Voicelines,1 ; 2026 - s2 - diablo
+1A19,078,Voicelines,1 ; 2026 - s2
+1A1A,078,Voicelines,1 ; 2026 - s2
+1A1B,078,Voicelines,1 ; 2026 - s2
 ; Note: Weapon models are often two entities, one for 1P, one for 3P, if they have different animations
 ; Ana,Classic,47,
 1610,003,Teabag,0
@@ -752,6 +768,8 @@ EC11,01C,Season17,1
 EC12,01C,Season18,1
 EC13,01C,Season19,1
 EC14,01C,Season20,1
+11932,01C,2026 Season1,1
+1257D,01C,2026 Season2,1
 ; Lobby map names,,,
 664,09F,Menu/Hanamura,1
 675,09F,Menu/Gibraltar,1
@@ -871,6 +889,7 @@ F4A,09F,Menu/Ilios (Junker Queen),1
 13E9,09F,Menu/Vendetta 3D,1
 13F0,09F,Menu/S20 Christmas Art,1
 13F1,09F,Menu/S20 Mythics 3D,1
+1407,09F,Menu/Doomfist Mythic 3D,1
 ; Celebrations,,,
 2168,01C,Winter,1
 2498,01C,LunarNewYear,1
@@ -898,6 +917,7 @@ F4A,09F,Menu/Ilios (Junker Queen),1
 32C,0C3,Anniversary 2025 Week 4,1 ; gibraltar.. few maps..
 330,0C3,Haunted Masquerade,1 ; lijiang
 353,0C3,Winter 2025,1 ; any map with winter modes
+3B0,0C3,Showdown Shuffle,1 ; many maps
 ; NPC VoiceSet names,,,
 1C2,05F,Sojourn,1
 22F,05F,Zeus,1
@@ -908,6 +928,11 @@ F4A,09F,Menu/Ilios (Junker Queen),1
 021,17B,Epic Loot Box (S16),1
 026,17B,Loot Box (S16),1
 027,17B,Legendary Loot Box (S16),1
+03A,17B,Esports Loot Box (2026 S1),1
+041,17B,Loot Box (2026 S1),1
+042,17B,Epic Loot Box (2026 S1),1
+043,17B,Legendary Loot Box (2026 S1),1
+045,17B,Anniversary Loot Box (2026 S2),1
 ; Rarities,,,
 297,01C,Common,1
 61ED,01C,Epic,1

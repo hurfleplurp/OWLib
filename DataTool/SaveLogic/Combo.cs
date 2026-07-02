@@ -15,6 +15,7 @@ using DirectXTexNet;
 using RevorbStd;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.ColorSpaces.Conversion;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using TankLib;
 using TankLib.Chunks;
@@ -26,6 +27,11 @@ namespace DataTool.SaveLogic;
 
 public static class Combo {
     public static ScratchDB ScratchDBInstance = new ScratchDB();
+
+    // reduce compression level a bit to help performance
+    private static readonly PngEncoder PngEncoder = new PngEncoder {
+        CompressionLevel = PngCompressionLevel.Level3
+    };
 
     public class SaveContext {
         public FindLogic.Combo.ComboInfo m_info;
@@ -99,7 +105,7 @@ public static class Combo {
                 var subtitleStr = subtitle.Trim().TrimEnd('.');
                 if (soundSet.Count > 1) {
                     realPath = Path.Combine(realPath, GetValidFilename(subtitleStr));
-                    WriteFile(string.Join("\n", subtitle), Path.Combine(realPath, $"{teResourceGUID.LongKey(voiceLineInstanceInfo.Subtitle):X8}-{teResourceGUID.LongKey(voiceLineInstanceInfo.SubtitleRuntime):X8}-subtitles.txt"));
+                    WriteFile(string.Join("\n", subtitle), Path.Combine(realPath, $"{teResourceGUID.LongKey(voiceLineInstanceInfo.Subtitle):X8}-subtitles.txt"));
                 } else if (soundSet.Count == 1) {
                     try {
                         if (subtitleAsSound) {
@@ -651,8 +657,8 @@ public static class Combo {
     private static void ProcessPortraitTexture(teTexture texture, string filePath, string convertType) {
         var converted = new TexDecoder(texture, false);
 
-        using Image<Bgra32> alphaImage = converted.GetFrame(0);
-        using Image<Bgra32> colorImage = converted.GetFrame(1);
+        using var alphaImage = converted.GetFrame(0);
+        using var colorImage = converted.GetFrame(1);
 
         alphaImage.ProcessPixelRows(colorImage, (source, target) => {
             for (var y = 0; y < texture.Header.Height; ++y) {
@@ -728,12 +734,27 @@ public static class Combo {
             if (extractFlags.ForceDDSMultiSurface) {
                 multiSurfaceConvertType = "dds";
             }
-            if (!useTextureDecoder || convertType == "dds" || multiSurfaceConvertType == "dds") {
-                // we need to load all mips to save as dds (even in memory)
-                maxMips = int.MaxValue;
-            }
         }
 
+        // todo: we can't serialize tifs with alpha via imagesharp
+        // turn off AssetRipper instead
+        if (useTextureDecoder && convertType == "tif" && OperatingSystem.IsWindows()) {
+            useTextureDecoder = false;
+        }
+
+        // sanity if splitMultiSurface is somehow unset for texture formats that don't support layers
+        // (it's on by default)
+        var supportsArray = multiSurfaceConvertType == "tif" || multiSurfaceConvertType == "dds";
+        if (!supportsArray && !splitMultiSurface && !createMultiSurfaceSheet) {
+            splitMultiSurface = true;
+        }
+        
+        if (!useTextureDecoder || convertType == "dds" || multiSurfaceConvertType == "dds") {
+            // we need to load all mips to save as dds (even in memory)
+            maxMips = int.MaxValue;
+        }
+
+        // todo: why?
         if (!path.EndsWith(Path.DirectorySeparatorChar.ToString()))
             path += Path.DirectorySeparatorChar;
 
@@ -849,7 +870,7 @@ public static class Combo {
         }
     }
 
-    private static void SaveTexImageSharp(Image<Bgra32> img, string path, string convertType) {
+    private static void SaveTexImageSharp(Image<Rgba32> img, string path, string convertType) {
         var finalPath = $"{path}.{convertType}";
         CreateDirectoryFromFile(finalPath);
         
@@ -861,7 +882,7 @@ public static class Combo {
                 break;
             }
             case "png": {
-                img.SaveAsPng(finalPath);
+                img.SaveAsPng(finalPath, PngEncoder);
                 break;
             }
         }

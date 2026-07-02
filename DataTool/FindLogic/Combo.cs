@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -16,7 +17,7 @@ using static DataTool.Helper.IO;
 namespace DataTool.FindLogic;
 
 public static class Combo {
-    private static readonly HashSet<ushort> s_unhandledTypes = new HashSet<ushort>();
+    private static readonly ConcurrentBag<ushort> s_unhandledTypes = new ConcurrentBag<ushort>();
 
     public class ComboInfo {
         // keep everything at top level, stops us from doing the same things again.
@@ -91,6 +92,7 @@ public static class Combo {
         }
 
         private static void SetAssetName<T>(ulong guid, string name, Dictionary<ulong, T> map, Dictionary<ulong, ulong> replacements = null) where T : ComboAsset {
+            if (name == null) return;
             if (replacements != null) guid = GetReplacement(guid, replacements);
             if (!map.TryGetValue(guid, out var asset)) return;
             asset.m_name = name.TrimEnd(' ');
@@ -210,7 +212,6 @@ public static class Combo {
         public ulong VoiceStimulus;
         public ulong[] Conversations;
         public ulong Subtitle;
-        public ulong SubtitleRuntime;
         public HashSet<ulong> SoundFiles;
 
         public STUCriteriaContainer? m_criteria;
@@ -1052,11 +1053,14 @@ public static class Combo {
                         voiceLineInstanceInfo.VoiceStimulus = voiceLineInstance.m_voiceLineRuntime.m_stimulus;
                         voiceLineInstanceInfo.ExternalSound = voiceLineInstance.m_voiceLineRuntime.m_externalSound;
                         voiceLineInstanceInfo.Conversations = voiceLineInstance.m_voiceLineRuntime.m_BD1B6F64?.Select(x => x.GUID.GUID).ToArray();
-                        voiceLineInstanceInfo.SubtitleRuntime = voiceLineInstance.m_voiceLineRuntime.m_6148094F;
                         voiceLineInstanceInfo.m_criteria = voiceLineInstance.m_voiceLineRuntime.m_criteria;
                         voiceLineInstanceInfo.m_weight = voiceLineInstance.m_voiceLineRuntime.m_weight;
                         Find(info, voiceLineInstanceInfo.ExternalSound, replacements, context);
-                        Find(info, voiceLineInstanceInfo.SubtitleRuntime, replacements, context);
+
+                        if (voiceLineInstanceInfo.Subtitle == 0) {
+                            voiceLineInstanceInfo.Subtitle = voiceLineInstance.m_voiceLineRuntime.m_6148094F;
+                            Find(info, voiceLineInstanceInfo.Subtitle, replacements, context);
+                        }
                     } else {
                         Console.Out.WriteLine("[DataTool.FindLogic.Combo]: ERROR: voice data container was null (please contact the developers)");
                         if (Debugger.IsAttached) {
@@ -1207,7 +1211,8 @@ public static class Combo {
                 break;
             }
             default: {
-                if (s_unhandledTypes.Add(guidType)) {
+                if (!s_unhandledTypes.Contains(guidType)) {
+                    s_unhandledTypes.Add(guidType);
                     Debugger.Log(0, "DataTool", $"[DataTool.FindLogic.Combo]: Unhandled type: {guidType:X3}\r\n");
                 }
 

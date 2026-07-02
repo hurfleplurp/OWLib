@@ -186,11 +186,14 @@ class ExtractHeroVoiceBetter : QueryParser, ITool, IQueryParser {
                     stack.Add(basePath);
 
                     string hero03FDir;
-                    if (flags.VoiceGroup03FInType) {
-                        hero03FDir = Path.Combine(path, "03F");
-                    } else {
+                    if (flags.VoiceFlat03F) {
                         CalculatePathStack(flags, heroName, unlockName, "03F", stack);
                         hero03FDir = Path.Combine(stack.ToArray());
+                    } else {
+                        var subtitle = GetSubtitleString(voiceLineInstance.Subtitle)?.Trim()?.TrimEnd('.');
+                        
+                        subtitle ??= "03F";
+                        hero03FDir = Path.Combine(path, GetValidFilename(subtitle));
                     }
 
                     string criteriaDesc = null;
@@ -284,6 +287,11 @@ class ExtractHeroVoiceBetter : QueryParser, ITool, IQueryParser {
         0x7C00000000958E8, // 0000000958E8.03F
         0x7C00000000958E6, // 0000000958E6.03F
         0x7C00000001BD800, // 0000001BD800.03F
-        0x07C00000001BD7FF, // 0000001BD7FF.03F
+        0x7C00000001BD7FF, // 0000001BD7FF.03F
+        
+        // after 2.20.1
+        0x7C00000002B2BF7, // 0000002B2BF7.03F
+        0x7C00000002B2C0A, // 0000002B2C0A.03F
+        0x7C00000002B2C61, // 0000002B2C61.03F
     };
 }
